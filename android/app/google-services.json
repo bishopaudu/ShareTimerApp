@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "593811490827",
+    "project_id": "sharetimerapp-ba10e",
+    "storage_bucket": "sharetimerapp-ba10e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:593811490827:android:9d29c41e67c5b467021f0e",
+        "android_client_info": {
+          "package_name": "com.ourtime.shared_timer_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDomDdJb1VjVvC5d7FKiTpwLcb0z4Sk3Jo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
