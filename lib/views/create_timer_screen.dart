@@ -411,6 +411,9 @@ class _CreateTimerScreenState extends State<CreateTimerScreen> {
     );
 
     if (timerId != null && mounted) {
+      // Save it locally to history using the correct provider instance
+      await participantViewModel.addCreatedTimer(timerId);
+
       // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(

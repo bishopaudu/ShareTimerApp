@@ -8,6 +8,7 @@ class AppConstants {
   static const String timersCollection = 'timers';
   static const String participantsCollection = 'participants';
   static const String alarmsCollection = 'alarms';
+  static const String sharedAlarmsCollection = 'shared_alarms';
 
   // Notification Channel IDs
   static const String timerChannelId = 'timer_notifications';

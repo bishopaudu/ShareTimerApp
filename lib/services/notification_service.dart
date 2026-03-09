@@ -30,11 +30,14 @@ class NotificationService {
       '@mipmap/ic_launcher',
     );
 
-    // iOS initialization settings
+    // iOS initialization settings - do NOT request permissions here.
+    // Requesting permissions shows a system dialog which blocks the splash
+    // screen initialization indefinitely. Call requestPermissions() separately
+    // at an appropriate moment (e.g. after onboarding is complete).
     const iosSettings = DarwinInitializationSettings(
-      requestAlertPermission: true,
-      requestBadgePermission: true,
-      requestSoundPermission: true,
+      requestAlertPermission: false,
+      requestBadgePermission: false,
+      requestSoundPermission: false,
     );
 
     const initSettings = InitializationSettings(
@@ -255,6 +258,74 @@ class NotificationService {
       }
     } catch (e) {
       print('Failed to schedule alarm notification: $e');
+    }
+  }
+
+  /// Schedule a generic UTC-based shared alarm notification
+  Future<void> scheduleSharedAlarmNotification({
+    required int notificationId,
+    required String alarmTitle,
+    required DateTime triggerTimeUtc,
+    required String alarmId,
+  }) async {
+    try {
+      // Ensure triggerTime is treated as Local by timezone logic effectively converting from UTC correctly.
+      final scheduledDate = tz.TZDateTime.from(
+        triggerTimeUtc.toLocal(),
+        tz.local,
+      );
+
+      // Don't schedule if the time is in the past
+      if (scheduledDate.isBefore(tz.TZDateTime.now(tz.local))) {
+        return;
+      }
+
+      const androidDetails = AndroidNotificationDetails(
+        AppConstants.alarmChannelId,
+        AppConstants.alarmChannelName,
+        channelDescription: AppConstants.alarmChannelDescription,
+        importance: Importance.max,
+        priority: Priority.max,
+        playSound: true,
+        enableVibration: true,
+      );
+
+      const iosDetails = DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      );
+
+      const notificationDetails = NotificationDetails(
+        android: androidDetails,
+        iOS: iosDetails,
+      );
+
+      try {
+        await _notifications.zonedSchedule(
+          id: notificationId,
+          title: 'Shared Alarm: $alarmTitle',
+          body: 'Your shared alarm has been triggered!',
+          scheduledDate: scheduledDate,
+          notificationDetails: notificationDetails,
+          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+          payload: 'shared_alarm_$alarmId',
+        );
+      } catch (e) {
+        print('Failed to schedule exact shared alarm notification: $e');
+        // Fallback to inexact
+        await _notifications.zonedSchedule(
+          id: notificationId,
+          title: 'Shared Alarm: $alarmTitle',
+          body: 'Your shared alarm has been triggered!',
+          scheduledDate: scheduledDate,
+          notificationDetails: notificationDetails,
+          androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+          payload: 'shared_alarm_$alarmId',
+        );
+      }
+    } catch (e) {
+      print('Failed to schedule shared alarm notification: $e');
     }
   }
 

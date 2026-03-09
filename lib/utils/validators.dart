@@ -86,6 +86,20 @@ class Validators {
     return null; // Valid
   }
 
+  /// Validate shared alarm trigger time
+  /// Returns null if valid, error message if invalid
+  static String? validateSharedAlarmTrigger(DateTime? triggerTime) {
+    if (triggerTime == null) {
+      return 'Please enter a valid trigger time.';
+    }
+
+    if (triggerTime.isBefore(DateTime.now())) {
+      return 'Trigger time must be in the future.';
+    }
+
+    return null; // Valid
+  }
+
   /// Validate display name for participants
   /// Returns null if valid, error message if invalid
   static String? validateDisplayName(String? name) {

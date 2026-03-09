@@ -64,6 +64,24 @@ class FirebaseService {
     }
   }
 
+  /// Get multiple timers by a list of IDs (Used for History)
+  Future<List<TimerModel>> getTimersByIds(List<String> timerIds) async {
+    if (timerIds.isEmpty) return [];
+
+    try {
+      // Fetch up to 10 at a time (Firestore limit for 'whereIn')
+      // For MVP, just fetching them individually in parallel is easier and avoids limit chunks
+      // since the history list shown on home screen is small (max 3).
+      final futures = timerIds.map((id) => getTimerById(id));
+      final results = await Future.wait(futures);
+
+      // Filter out nulls (deleted timers) and cast to List<TimerModel>
+      return results.whereType<TimerModel>().toList();
+    } catch (e) {
+      throw Exception('Failed to fetch timer history: $e');
+    }
+  }
+
   /// Get real-time stream of a timer
   Stream<TimerModel?> getTimerStream(String timerId) {
     return _firestore

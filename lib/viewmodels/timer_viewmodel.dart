@@ -169,6 +169,17 @@ class TimerViewModel extends ChangeNotifier {
     }
   }
 
+  /// Get multiple timers by their IDs (For History)
+  Future<List<TimerModel>> getTimersByIds(List<String> timerIds) async {
+    if (timerIds.isEmpty) return [];
+    try {
+      return await _firebaseService.getTimersByIds(timerIds);
+    } catch (e) {
+      print('Failed to get timer history: $e');
+      return [];
+    }
+  }
+
   /// Get a stream of a timer for real-time updates
   Stream<TimerModel?> getTimerStream(String timerId) {
     return _firebaseService.getTimerStream(timerId);

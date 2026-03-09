@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import '../services/notification_service.dart';
 import '../viewmodels/participant_viewmodel.dart';
 
 /// Welcome Screen for first-time users
@@ -65,6 +66,10 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       displayName: _nameController.text.trim(),
       emoji: _selectedEmoji,
     );
+
+    // Request notification permissions now that onboarding is complete.
+    // This is done here (not during splash) to avoid blocking initialization.
+    await NotificationService().requestPermissions();
 
     if (mounted) {
       Navigator.of(context).pushReplacementNamed('/home');

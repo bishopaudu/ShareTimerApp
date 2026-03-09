@@ -30,10 +30,15 @@ class TimerDetailScreen extends StatefulWidget {
 }
 
 class _TimerDetailScreenState extends State<TimerDetailScreen> {
+  late final ParticipantViewModel _participantViewModel;
+
   @override
   void initState() {
     super.initState();
-    // _joinAsParticipant();
+    _participantViewModel = Provider.of<ParticipantViewModel>(
+      context,
+      listen: false,
+    );
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _joinAsParticipant();
@@ -48,20 +53,12 @@ class _TimerDetailScreenState extends State<TimerDetailScreen> {
 
   /// Join this timer as a participant
   Future<void> _joinAsParticipant() async {
-    final participantViewModel = Provider.of<ParticipantViewModel>(
-      context,
-      listen: false,
-    );
-    await participantViewModel.joinTimer(timerId: widget.timerId);
+    await _participantViewModel.joinTimer(timerId: widget.timerId);
   }
 
   /// Leave this timer when screen is disposed
   Future<void> _leaveAsParticipant() async {
-    final participantViewModel = Provider.of<ParticipantViewModel>(
-      context,
-      listen: false,
-    );
-    await participantViewModel.leaveTimer(widget.timerId);
+    await _participantViewModel.leaveTimer(widget.timerId);
   }
 
   @override

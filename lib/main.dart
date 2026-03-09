@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'viewmodels/timer_viewmodel.dart';
 import 'viewmodels/participant_viewmodel.dart';
 import 'viewmodels/alarm_viewmodel.dart';
+import 'viewmodels/shared_alarm_viewmodel.dart';
 
 import 'views/splash_screen.dart';
 import 'views/home_screen.dart';
@@ -44,6 +45,9 @@ class SharedTimerApp extends StatelessWidget {
 
         // Alarm ViewModel
         ChangeNotifierProvider(create: (_) => AlarmViewModel()),
+
+        // Shared Alarm ViewModel
+        ChangeNotifierProvider(create: (_) => SharedAlarmViewModel()),
       ],
       child: MaterialApp(
         title: 'ShareTime',

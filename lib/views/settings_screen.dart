@@ -152,7 +152,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 ),
                                 child: Text(
                                   emoji,
-                                  style: const TextStyle(fontSize: 24),
+                                  style: GoogleFonts.montserrat(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ),
                             );

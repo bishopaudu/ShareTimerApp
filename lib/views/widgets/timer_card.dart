@@ -11,8 +11,14 @@ import '../../services/timer_calculation_service.dart';
 class TimerCard extends StatelessWidget {
   final TimerModel timer;
   final VoidCallback onTap;
+  final String? subtitle;
 
-  const TimerCard({super.key, required this.timer, required this.onTap});
+  const TimerCard({
+    super.key,
+    required this.timer,
+    required this.onTap,
+    this.subtitle,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -45,15 +51,32 @@ class TimerCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Expanded(
-                    child: Text(
-                      timer.title,
-                      style: GoogleFonts.montserrat(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: colorScheme.onSurface,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          timer.title,
+                          style: GoogleFonts.montserrat(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: colorScheme.onSurface,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (subtitle != null) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            subtitle!,
+                            style: GoogleFonts.montserrat(
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ],
                     ),
                   ),
                   const SizedBox(width: 8),

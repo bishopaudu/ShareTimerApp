@@ -21,6 +21,12 @@ class ParticipantViewModel extends ChangeNotifier {
   String? _currentUserId;
   UserProfileModel? _userProfile;
   Timer? _presenceTimer;
+  bool _hasSeenOnboarding = false;
+  bool _isProfileSetup = false;
+
+  // History tracking
+  List<String> _joinedTimerIds = [];
+  List<String> _createdTimerIds = [];
 
   /// Constructor
   ParticipantViewModel() {
@@ -32,19 +38,66 @@ class ParticipantViewModel extends ChangeNotifier {
   String? get error => _error;
   String? get currentUserId => _currentUserId;
   UserProfileModel? get userProfile => _userProfile;
+  bool get hasSeenOnboarding => _hasSeenOnboarding;
+  bool get isProfileSetup => _isProfileSetup;
+  List<String> get joinedTimerIds => _joinedTimerIds;
+  List<String> get createdTimerIds => _createdTimerIds;
 
   /// Initialize the ViewModel
   /// Loads user ID and profile from SharedPreferences
   Future<void> initialize() async {
     final prefs = await SharedPreferences.getInstance();
     _currentUserId = prefs.getString('user_id');
+    _hasSeenOnboarding = prefs.getBool('has_seen_onboarding') ?? false;
 
     if (_currentUserId == null) {
       _currentUserId = _uuid.v4();
       await prefs.setString('user_id', _currentUserId!);
     }
 
+    // Load explicit profile setup flag
+    final isProfileSetupStored = prefs.getBool('is_profile_setup');
+
+    // Migration: if the key doesn't exist yet, check if the user already has
+    // a saved profile. If they do, treat them as having completed setup and
+    // backfill the key so they don't get sent through onboarding again.
+    if (isProfileSetupStored == null) {
+      final existingProfile = prefs.getString('user_profile_$_currentUserId');
+      if (existingProfile != null) {
+        _isProfileSetup = true;
+        await prefs.setBool('is_profile_setup', true);
+      } else {
+        _isProfileSetup = false;
+      }
+    } else {
+      _isProfileSetup = isProfileSetupStored;
+    }
+
     await _loadProfile();
+    await _loadTimerHistory();
+  }
+
+  /// Load timer history (joined and created timers)
+  Future<void> _loadTimerHistory() async {
+    final prefs = await SharedPreferences.getInstance();
+    _joinedTimerIds =
+        prefs.getStringList('joined_timers_$_currentUserId') ?? [];
+    _createdTimerIds =
+        prefs.getStringList('created_timers_$_currentUserId') ?? [];
+    notifyListeners();
+  }
+
+  /// Add a timer to the created history
+  Future<void> addCreatedTimer(String timerId) async {
+    if (!_createdTimerIds.contains(timerId)) {
+      _createdTimerIds.insert(0, timerId); // Add to top of list
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setStringList(
+        'created_timers_$_currentUserId',
+        _createdTimerIds,
+      );
+      notifyListeners();
+    }
   }
 
   /// Get the current user ID, creating one if it doesn't exist (fallback)
@@ -60,6 +113,14 @@ class ParticipantViewModel extends ChangeNotifier {
       });
     }
     return _currentUserId!;
+  }
+
+  /// Mark onboarding as complete
+  Future<void> completeOnboarding() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('has_seen_onboarding', true);
+    _hasSeenOnboarding = true;
+    notifyListeners();
   }
 
   /// Add current user as a participant to a timer
@@ -89,6 +150,16 @@ class ParticipantViewModel extends ChangeNotifier {
 
       // Start presence updates
       _startPresenceUpdates(timerId, userId);
+
+      // Add to local joined history
+      if (!_joinedTimerIds.contains(timerId)) {
+        _joinedTimerIds.insert(0, timerId);
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setStringList(
+          'joined_timers_$_currentUserId',
+          _joinedTimerIds,
+        );
+      }
 
       _isLoading = false;
       notifyListeners();
@@ -213,13 +284,15 @@ class ParticipantViewModel extends ChangeNotifier {
     if (profileJson != null) {
       _userProfile = UserProfileModel.fromJson(profileJson);
     } else {
-      // Create a default profile
+      // Create a default in-memory profile but do NOT persist it.
+      // The profile is only saved once the user explicitly sets it
+      // up via the WelcomeScreen, so we can correctly route new users
+      // through the onboarding flow.
       _userProfile = UserProfileModel(
         id: _currentUserId!,
         displayName: _generateDisplayName(),
         emoji: '👋',
       );
-      await _saveProfile();
     }
     notifyListeners();
   }
@@ -252,6 +325,14 @@ class ParticipantViewModel extends ChangeNotifier {
     );
 
     await _saveProfile();
+
+    // Mark profile as explicitly set up by the user
+    if (!_isProfileSetup) {
+      _isProfileSetup = true;
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('is_profile_setup', true);
+    }
+
     print('Profile updated: ${_userProfile!.toJson()}'); // Debug log
     notifyListeners();
   }

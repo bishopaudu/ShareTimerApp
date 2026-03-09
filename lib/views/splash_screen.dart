@@ -6,6 +6,7 @@ import '../services/notification_service.dart';
 import '../viewmodels/participant_viewmodel.dart';
 import 'home_screen.dart';
 import 'welcome_screen.dart';
+import 'onboarding_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -77,18 +78,27 @@ class _SplashScreenState extends State<SplashScreen>
       setState(() => _statusMessage = 'Error: $e');
     } finally {
       if (mounted) {
-        // Check if user has completed onboarding
+        // Check if user has completed onboarding and profile setup
         final participantViewModel = Provider.of<ParticipantViewModel>(
           context,
           listen: false,
         );
 
-        final hasProfile = participantViewModel.userProfile != null;
+        final isProfileSetup = participantViewModel.isProfileSetup;
+        final hasSeenOnboarding = participantViewModel.hasSeenOnboarding;
+
+        Widget nextScreen;
+        if (isProfileSetup) {
+          nextScreen = const HomeScreen();
+        } else if (hasSeenOnboarding) {
+          nextScreen = const WelcomeScreen();
+        } else {
+          nextScreen = const OnboardingScreen();
+        }
 
         Navigator.of(context).pushReplacement(
           PageRouteBuilder(
-            pageBuilder: (_, __, ___) =>
-                hasProfile ? const HomeScreen() : const WelcomeScreen(),
+            pageBuilder: (_, __, ___) => nextScreen,
             transitionsBuilder: (_, animation, __, child) {
               return FadeTransition(opacity: animation, child: child);
             },
